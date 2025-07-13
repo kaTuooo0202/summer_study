@@ -289,5 +289,5 @@ const App = () => {
     </div>
   );
 };
-
+console.log(firebaseConfig);
 export default App;
