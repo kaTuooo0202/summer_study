@@ -28,7 +28,8 @@
     "rm": "rm -rf ./docs",
     "mv": "move build ./docs",
     "git": "git add . && git commit && git push origin main",
-    "deploy": "npm run rm && npm run build && npm run mv && npm run git"
+    "predeploy": "npm run build",
+    "deploy": "npm run rm && gh-pages -d build && npm run mv && npm run git"
   },
   "eslintConfig": {
     "extends": [
@@ -59,5 +60,8 @@
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/kaTuooo0202/summer_study/issues"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
