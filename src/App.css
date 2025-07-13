@@ -1,0 +1,25 @@
+.app-container {
+  font-family: sans-serif;
+  padding: 2rem;
+  color:#ddd;
+  background-color: #1c1c1c;
+}
+
+.card {
+  background: #323232;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+}
+
+.step-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.done {
+  text-decoration: line-through;
+  color: rgb(201, 201, 201);
+}
