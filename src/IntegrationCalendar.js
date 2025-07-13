@@ -10,7 +10,7 @@ import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 // --- Firebaseの初期設定 ---
 // Canvas環境から提供されるグローバル変数を安全に取得します。
 // ESLintエラー(no-undef)を回避するため、グローバルスコープである`window`オブジェクトからアクセスします。
-
+const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
 const firebaseConfig = {
   apiKey: "AIzaSyBwK4FsovgOkK0Hc1yN2G4BqDG3Pv21nGs",
   authDomain: "integrationcalendar-fdf55.firebaseapp.com",
@@ -20,6 +20,8 @@ const firebaseConfig = {
   appId: "1:1075773261388:web:5900aa7deac1bb9c0d56e9",
   measurementId: "G-FQLXL0W1H4"
 };
+const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
+
 // Firebaseアプリを初期化します。設定オブジェクトが空でない場合のみ実行します。
 let app, db, auth;
 if (Object.keys(firebaseConfig).length > 0) {
