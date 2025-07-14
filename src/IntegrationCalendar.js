@@ -3,36 +3,18 @@ import dayjs from 'dayjs';
 import { Tooltip } from 'react-tooltip';
 
 // Firebaseのインポート
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from './firebase'; // <-- ここが変更点！
 
 // --- Firebaseの初期設定 ---
 // Canvas環境から提供されるグローバル変数を安全に取得します。
 // ESLintエラー(no-undef)を回避するため、グローバルスコープである`window`オブジェクトからアクセスします。
 const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
-const firebaseConfig = {
-  apiKey: "AIzaSyBwK4FsovgOkK0Hc1yN2G4BqDG3Pv21nGs",
-  authDomain: "integrationcalendar-fdf55.firebaseapp.com",
-  projectId: "integrationcalendar-fdf55",
-  storageBucket: "integrationcalendar-fdf55.firebasestorage.app",
-  messagingSenderId: "1075773261388",
-  appId: "1:1075773261388:web:5900aa7deac1bb9c0d56e9",
-  measurementId: "G-FQLXL0W1H4"
-};
-const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
 
-// Firebaseアプリを初期化します。設定オブジェクトが空でない場合のみ実行します。
-let app, db, auth;
-if (Object.keys(firebaseConfig).length > 0) {
-  try {
-    app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    auth = getAuth(app);
-  } catch (error) {
-    console.error("Firebaseの初期化に失敗しました:", error);
-  }
-}
+// 新しく作成した src/firebase.js から、初期化済みの Firebase インスタンスをインポート
+
+const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
 
 // メインのReactコンポーネント
 const App = () => {
@@ -289,5 +271,4 @@ const App = () => {
     </div>
   );
 };
-console.log(firebaseConfig);
 export default App;
