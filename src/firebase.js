@@ -51,4 +51,6 @@ if (app) { // アプリが正常に初期化された場合のみ、AuthとFires
 
 // --- 4. 外部ファイルから利用できるようにエクスポート ---
 // これらを他のファイルでインポートして利用します
+console.log(auth);
+console.log(db);
 export { app, auth, db };
