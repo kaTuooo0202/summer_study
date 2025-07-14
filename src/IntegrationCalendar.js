@@ -2,129 +2,120 @@ import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { Tooltip } from 'react-tooltip';
 
-// Firebaseのインポート
-import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+// Firebaseのインポート（Google認証とログアウト機能を追加）
+import { 
+  onAuthStateChanged, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signOut 
+} from 'firebase/auth';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase'; // <-- ここが変更点！
 
-// --- Firebaseの初期設定 ---
-// Canvas環境から提供されるグローバル変数を安全に取得します。
-// ESLintエラー(no-undef)を回避するため、グローバルスコープである`window`オブジェクトからアクセスします。
+// --- Firebaseの初期設定 (デモ用) ---
 const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
 
-// 新しく作成した src/firebase.js から、初期化済みの Firebase インスタンスをインポート
-
-const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
 
 // メインのReactコンポーネント
 const App = () => {
   // 日ごとのカウントを保存するstate
   const [counts, setCounts] = useState({});
-  // FirebaseのユーザーIDを保存するstate
-  const [userId, setUserId] = useState(null);
+  // Firebaseのユーザー情報を保存するstate
+  const [user, setUser] = useState(null);
   // 認証処理が完了したかを管理するstate
   const [isAuthReady, setIsAuthReady] = useState(false);
+  // ボタンアニメーションを管理するstate
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // 今日の日付 ('YYYY-MM-DD'形式)
   const today = dayjs().format('YYYY-MM-DD');
 
-  // --- Firebase認証処理 ---
+  // --- Firebase認証処理 (Googleログイン対応) ---
   useEffect(() => {
-    // authが初期化されていない場合は処理を中断
-    if (!auth) {
-      console.warn("Firebase Authが初期化されていません。");
-      // 認証が利用できなくてもUIは表示するため、isAuthReadyをtrueにする
-      setIsAuthReady(true);
-      return;
-    }
-
     // 認証状態の変更を監視するリスナーを登録
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // ユーザーが既にログインしている場合
-        setUserId(user.uid);
-        setIsAuthReady(true);
-        console.log("ユーザーはログイン済みです:", user.uid);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser); // ユーザー情報をセット
+      setIsAuthReady(true); // 認証チェック完了
+      if (currentUser) {
+        console.log("ログイン中:", currentUser.displayName);
       } else {
-        // ユーザーがログインしていない場合、サインインを試みる
-        try {
-          if (initialAuthToken) {
-            // Canvas環境から提供されたトークンでサインイン
-            await signInWithCustomToken(auth, initialAuthToken);
-            console.log("カスタムトークンでサインインしました。");
-          } else {
-            // トークンがない場合（ローカル開発など）は匿名認証
-            await signInAnonymously(auth);
-            console.log("匿名認証でサインインしました。");
-          }
-          // onAuthStateChangedが再度発火し、上記のif (user)ブロックが実行されるのを待つ
-        } catch (error) {
-          console.error("サインインに失敗しました:", error);
-          setIsAuthReady(true); // エラーが発生してもUIのブロックを解除
-        }
+        console.log("ログアウト状態");
       }
     });
-
     // コンポーネントがアンマウントされる時にリスナーを解除
     return () => unsubscribe();
-  }, []); // このeffectはコンポーネントの初回マウント時に一度だけ実行
+  }, []);
 
   // --- Firestoreデータ購読処理 ---
   useEffect(() => {
-    // dbが未初期化、またはユーザー認証が未完了の場合は処理を中断
-    if (!db || !userId || !isAuthReady) {
+    // ユーザー認証が未完了の場合は処理を中断
+    if (!user || !isAuthReady) {
+      setCounts({}); // ログアウトしたらカウントをリセット
       return;
     }
 
+    const userId = user.uid;
     // 購読するドキュメントの参照を作成
     const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/integrationCounts`, 'dailyCounts');
     console.log(`Firestoreドキュメントの購読を開始します: ${userDocRef.path}`);
 
-    // ドキュメントの変更をリアルタイムで監視するリスナーを設定
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
-        // ドキュメントが存在すれば、そのデータをstateにセット
         setCounts(docSnap.data());
-        console.log("Firestoreからデータを読み込みました:", docSnap.data());
       } else {
-        // ドキュメントが存在しなければ、stateを空に初期化
         setCounts({});
-        console.log("Firestoreにデータが見つかりません。");
       }
     }, (error) => {
       console.error("Firestoreからのデータ取得に失敗しました:", error);
     });
 
-    // コンポーネントがアンマウントされる時にリスナーを解除
     return () => unsubscribe();
-  }, [userId, isAuthReady]); // userIdまたはisAuthReadyが変更された時に再実行
+  }, [user, isAuthReady]);
 
-  // --- 「積分できた！」ボタンのクリック処理 ---
+  // --- Googleログイン処理 ---
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Googleログインに失敗しました:", error);
+    }
+  };
+
+  // --- ログアウト処理 ---
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("ログアウトに失敗しました:", error);
+    }
+  };
+
+  // --- 「積分できた！」ボタンのクリック処理 (アニメーション追加) ---
   const handleAddIntegration = useCallback(async () => {
-    // dbが未初期化、またはユーザー認証が未完了の場合は処理を中断
-    if (!db || !userId) {
-      // alertはCanvas環境で表示されないため、console.errorを使用します
+    if (!user) {
       console.error("データベースに接続できません。認証状態を確認してください。");
       return;
     }
+    // アニメーションを開始
+    setIsAnimating(true);
 
-    // 更新するドキュメントの参照を作成
+    const userId = user.uid;
     const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/integrationCounts`, 'dailyCounts');
-    // 今日の日付のカウントを1増やす
     const newCount = (counts[today] || 0) + 1;
 
     try {
-      // Firestoreのドキュメントを更新（merge: trueで他の日付のデータを保持）
       await setDoc(userDocRef, { [today]: newCount }, { merge: true });
       console.log(`今日のカウントを更新しました: ${newCount}`);
     } catch (error) {
       console.error("Firestoreの更新に失敗しました:", error);
     }
-  }, [userId, counts, today]);
+    
+    // 500ms後にアニメーションをリセット
+    setTimeout(() => setIsAnimating(false), 500);
+  }, [user, counts, today]);
 
   // --- ヒートマップの描画ロジック ---
-
-  // カウントに応じてCSSクラスを返す関数
   const getClassForValue = (count) => {
     if (count === 0) return 'color-empty';
     if (count <= 20) return 'color-scale-1';
@@ -132,15 +123,13 @@ const App = () => {
     if (count <= 60) return 'color-scale-3';
     if (count <= 80) return 'color-scale-4';
     if (count <= 100) return 'color-scale-5';
-    return 'color-over sparkle'; // 100問超えはキラキラ
+    return 'color-over glow';
   };
 
-  // カスタムヒートマップを描画するコンポーネント
   const CustomHeatmap = React.memo(() => {
-    const startDate = dayjs().subtract(180, 'day'); // 約6ヶ月前から表示
-    const endDate = dayjs().add(180, 'day');      // 約6ヶ月後まで表示
+    const startDate = dayjs().subtract(180, 'day');
+    const endDate = dayjs().add(180, 'day');
     const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-
     const weeks = [];
     let currentDay = startDate.startOf('week');
 
@@ -153,34 +142,27 @@ const App = () => {
       currentDay = currentDay.add(7, 'day');
     }
 
-    // 月ラベルを生成
     const monthLabels = weeks
       .map((week, i) => {
         const firstDayOfMonth = week.find(day => day.date() === 1);
         if (firstDayOfMonth) {
-          return {
-            x: i * 16,
-            label: firstDayOfMonth.format('M月'),
-          };
+          return { x: i * 16, label: firstDayOfMonth.format('M月') };
         }
         return null;
       })
       .filter(Boolean);
 
-
     return (
       <div className="overflow-x-auto p-2">
         <svg width={weeks.length * 16} height={140}>
-          {/* 月ラベル */}
           <g transform="translate(0, 15)">
             {monthLabels.map(({ x, label }) => (
               <text key={label} x={x} y={0} className="text-xs fill-gray-500">{label}</text>
             ))}
           </g>
-          {/* 曜日ラベルとヒートマップセル */}
           <g transform="translate(0, 30)">
             {weekDays.map((day, i) => (
-               <text key={day} x={-15} y={i * 16 + 12} className="text-xs fill-gray-500" textAnchor="middle">{day}</text>
+              <text key={day} x={-15} y={i * 16 + 12} className="text-xs fill-gray-500" textAnchor="middle">{day}</text>
             ))}
             {weeks.map((week, weekIndex) => (
               <g key={weekIndex} transform={`translate(${weekIndex * 16}, 0)`}>
@@ -189,22 +171,14 @@ const App = () => {
                   const count = counts[dateStr] || 0;
                   const isFuture = day.isAfter(dayjs(), 'day');
                   const inSummerBreak = day.isAfter('2025-07-17') && day.isBefore('2025-09-11');
-
                   let classNames = getClassForValue(count);
                   if (dateStr === today) classNames += ' today';
                   if (inSummerBreak) classNames += ' summer';
                   if (isFuture) classNames += ' opacity-50';
 
                   return (
-                    <rect
-                      key={dateStr}
-                      y={dayIndex * 16}
-                      width={12}
-                      height={12}
-                      rx={2}
-                      ry={2}
-                      className={classNames}
-                      data-tooltip-id="heatmap-tooltip"
+                    <rect key={dateStr} y={dayIndex * 16} width={12} height={12} rx={2} ry={2}
+                      className={classNames} data-tooltip-id="heatmap-tooltip"
                       data-tooltip-content={`${dateStr}: ${count}問`}
                     />
                   );
@@ -219,27 +193,100 @@ const App = () => {
 
   // 合計カウントを計算
   const totalCount = Object.values(counts).reduce((sum, c) => sum + c, 0);
+  const goal = 5000;
+  const progressPercentage = Math.min((totalCount / goal) * 100, 100);
 
+  // --- レンダリング ---
+  
+  // 認証状態をチェック中
+  if (!isAuthReady) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-xl font-semibold text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
+
+  // 未ログイン時の表示
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4 text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">積分チャレンジカレンダー</h1>
+        <p className="text-gray-600 mb-8">毎日の頑張りを記録しよう！</p>
+        <button
+          onClick={handleGoogleSignIn}
+          className="flex items-center justify-center gap-3 px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg className="w-6 h-6" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+            <path fill="none" d="M0 0h48v48H0z"></path>
+          </svg>
+          <span className="text-base font-semibold text-gray-700">Googleでログイン</span>
+        </button>
+      </div>
+    );
+  }
+
+  // ログイン後の表示
   return (
     <div className="p-4 max-w-5xl mx-auto font-sans bg-gray-50 min-h-screen">
+      <header className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full" />
+          <span className="text-gray-700 font-semibold">{user.displayName}</span>
+        </div>
+        <button 
+          onClick={handleSignOut}
+          className="text-sm text-gray-500 hover:text-red-600 hover:underline transition-colors"
+        >
+          ログアウト
+        </button>
+      </header>
+
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-800">積分チャレンジカレンダー</h2>
-        <p className="text-sm text-gray-600 mt-2 mb-4">
-          ユーザーID: <span className="font-mono text-xs bg-gray-200 p-1 rounded break-all">{userId || '認証中...'}</span>
-        </p>
       </div>
 
-      <div className="my-6 flex flex-col items-center">
+      <div className="my-8 flex flex-col items-center">
         <button
           onClick={handleAddIntegration}
-          className="text-3xl px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          disabled={!isAuthReady || !userId}
+          className={`text-2xl px-10 py-5 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold rounded-full shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-orange-300 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none ${isAnimating ? 'poyon-animation' : ''}`}
         >
           積分できた！
         </button>
-        <p className="text-center text-xl font-semibold text-gray-700 mt-4">
-          合計：<span className="text-orange-600 text-2xl">{totalCount}</span> / 5000 問
-        </p>
+      </div>
+
+      <div className="my-8 max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6">
+          <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-2a3 3 0 00-3-3H9a3 3 0 00-3 3v2m12-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path d="M15 12c-2.333 2.333-2.333 2.333-7 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+              </div>
+              <div>
+                  <p className="text-sm text-gray-500">合計学習量</p>
+                  <p className="text-3xl font-bold text-gray-800">
+                      {totalCount.toLocaleString()}
+                      <span className="text-base font-medium text-gray-600 ml-1">問</span>
+                  </p>
+              </div>
+          </div>
+          <div className="mt-5">
+              <div className="flex justify-between items-baseline mb-1">
+                  <span className="text-sm font-semibold text-green-600">進捗</span>
+                  <span className="text-sm font-mono text-gray-500">{totalCount} / {goal}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                      className="bg-gradient-to-r from-green-400 to-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${progressPercentage}%` }}
+                  ></div>
+              </div>
+          </div>
       </div>
 
       <div className="mt-8 bg-white p-4 rounded-lg shadow-xl">
@@ -250,22 +297,35 @@ const App = () => {
       <style>{`
         body { background-color: #f9fafb; }
         .color-empty { fill: #ebedf0; }
-        .color-scale-1 { fill: #9be9a8; }
-        .color-scale-2 { fill: #40c463; }
-        .color-scale-3 { fill: #30a14e; }
-        .color-scale-4 { fill: #216e39; }
-        .color-scale-5 { fill: #1a4a2a; }
-        .color-over { fill: #ffd700; }
-        .today { stroke: #e53e3e; stroke-width: 2; }
-        .summer { stroke: #3182ce; stroke-dasharray: 2 2; stroke-width: 1.5; }
+        .color-scale-1 { fill: #c6e48b; }
+        .color-scale-2 { fill: #7bc96f; }
+        .color-scale-3 { fill: #239a3b; }
+        .color-scale-4 { fill: #196127; }
+        .color-scale-5 { fill: #103a18; }
+        .color-over { fill: #ffc107; }
+        .today { stroke: #d73a49; stroke-width: 2; }
+        .summer { stroke: #0366d6; stroke-dasharray: 2 2; stroke-width: 1.5; }
 
-        @keyframes sparkle-pulse {
-          0%, 100% { transform: scale(1); box-shadow: 0 0 4px #ffd700; }
-          50% { transform: scale(1.1); box-shadow: 0 0 12px #ffd700; }
+        @keyframes glow-effect {
+          0%, 100% { filter: drop-shadow(0 0 2px #fde047); stroke: rgba(255, 255, 255, 0.7); }
+          50% { filter: drop-shadow(0 0 6px #fde047); stroke: rgba(255, 255, 255, 1); }
         }
-        .sparkle {
-          animation: sparkle-pulse 1.5s infinite ease-in-out;
-          transform-origin: center;
+        .glow {
+          stroke: white;
+          stroke-width: 0.5px;
+          animation: glow-effect 2s infinite ease-in-out;
+        }
+
+        /* --- ボタンの「ポヨン！」アニメーション --- */
+        @keyframes poyon-effect {
+          0% { transform: scale(1); }
+          40% { transform: scale(0.95); }
+          60% { transform: scale(1.1); }
+          80% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        .poyon-animation {
+          animation: poyon-effect 0.5s ease-out;
         }
       `}</style>
     </div>
