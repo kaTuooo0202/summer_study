@@ -62,6 +62,9 @@
     "url": "https://github.com/kaTuooo0202/summer_study/issues"
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "autoprefixer": "^10.4.21",
+    "gh-pages": "^6.3.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.13"
   }
 }
