@@ -184,15 +184,14 @@ const App = () => {
     const weeks = [];
     let currentDay = startDate.startOf('week');
 
-    while (currentDay.isBefore(endDate)) {
-      const week = [];
-      for (let i = 0; i < 7; i++) {
-        week.push(currentDay.add(i, 'day'));
+      while (currentDay.isBefore(endDate)) {
+        const week = [];
+        for (let i = 0; i < 7; i++) {
+          week.push(currentDay.add(i, 'day').clone());
+        }
+        weeks.push(week);
+        currentDay = currentDay.add(7, 'day').startOf('day');
       }
-      weeks.push(week);
-      currentDay = currentDay.add(7, 'day');
-    }
-
     const monthLabels = weeks
       .map((week, i) => {
         const firstDayOfMonth = week.find(day => day.date() === 1);
@@ -284,11 +283,14 @@ const App = () => {
   // ログイン後の表示
   return (
     <div className="p-4 max-w-5xl mx-auto font-sans bg-gray-50 min-h-screen">
-      <header className="flex items-center justify-between mb-4">
+      <header className="flex items-center justify-between mb-4 pb-4 border-b-4 border-gray-200">
         <div className="flex items-center gap-3">
           <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full" />
           <span className="text-gray-700 font-semibold">{user.displayName}</span>
         </div>
+        <div className="text-center">
+        <h2 className="text-3xl font-bold text-gray-800">積分チャレンジカレンダー</h2>
+      </div>
         <button 
           onClick={handleSignOut}
           className="text-sm text-gray-500 hover:text-red-600 hover:underline transition-colors"
@@ -297,9 +299,7 @@ const App = () => {
         </button>
       </header>
 
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-800">積分チャレンジカレンダー</h2>
-      </div>
+      
 
       <div className="my-8 flex flex-col items-center">
         <button
@@ -359,11 +359,13 @@ const App = () => {
           </div>
       </div>
 
-      <div className="mt-8 bg-white p-4 rounded-lg shadow-xl">
-        <CustomHeatmap />
+      <div className="mt-8 bg-white p-4 rounded-lg shadow-xl overflow-x-auto">
+        <div className="w-fit mx-auto"> {/* ⭐️追加した行 */}
+          <CustomHeatmap />
+        </div>
         <Tooltip id="heatmap-tooltip" />
       </div>
-
+      
       <style>{`
         body { background-color: #f9fafb; }
         .color-empty { fill: #ebedf0; }
