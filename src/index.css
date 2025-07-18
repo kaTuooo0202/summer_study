@@ -7,12 +7,6 @@
 
 /* 他のカスタムCSSがあればここに追加 */
 
-.app-container {
-  font-family: sans-serif;
-  padding: 2rem;
-  color:#ddd;
-  background-color: #1c1c1c;
-}
 
 .card {
   background: #323232;

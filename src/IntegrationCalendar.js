@@ -135,6 +135,37 @@ const App = () => {
     setIsBouncing(false); // バウンス状態をfalseに戻して、次回に備える
   };
 
+    // ---【変更点】スペースキーでの操作 ---
+  // スペースキーが押されたらボタンのクリック処理を呼び出す
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // ユーザーがログインしていて、入力フォームなど以外でスペースキーが押された場合
+      if (user && event.code === 'Space' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+
+        // アニメーション開始
+        setIsPressed(true);
+        setIsBouncing(true);
+
+        // カウント更新処理
+        handleAddIntegration();
+
+        // 押された状態を少し保ってから戻す（マウスクリックのように）
+        setTimeout(() => {
+          setIsPressed(false);
+        }, 100); // タイミングはマウスの離しと揃えると自然
+      }
+
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // コンポーネントのアンマウント時にイベントリスナーを削除
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [user, handleAddIntegration]); // 依存配列にuserとhandleAddIntegrationを追加
+
   // --- ヒートマップの描画ロジック ---
   const getClassForValue = (count) => {
     if (count === 0) return 'color-empty';
@@ -278,7 +309,7 @@ const App = () => {
       onMouseLeave={handleMouseLeave} // マウスが離れた時にこの関数が呼ばれる
       onAnimationEnd={handleAnimationEnd} // アニメーション終了時にこの関数が呼ばれる
       className={`
-        text-2xl px-10 py-5 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold
+        text-3xl px-40 py-10 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold
         rounded-full // ここを 'rounded-full' に戻します
         shadow-xl    // 外側の影はそのまま
         shadow-poyon-glow // 通常時の内側の光沢
@@ -291,8 +322,7 @@ const App = () => {
       積分できた！
     </button>
       </div>
-
-      <div className="my-8 max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6">
+      <div className="flex-auto my-8 max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6">
           <div className="flex items-center space-x-4">
               <div className="flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -300,11 +330,18 @@ const App = () => {
                       <path d="M15 12c-2.333 2.333-2.333 2.333-7 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
               </div>
-              <div>
+              <div className='pr-6'>
                   <p className="text-sm text-gray-500">合計学習量</p>
                   <p className="text-3xl font-bold text-gray-800">
                       {totalCount.toLocaleString()}
                       <span className="text-base font-medium text-gray-600 ml-1">問</span>
+                  </p>
+              </div>
+              <div className="border-l-4 border-orange-100 pl-10">
+                <p className="text-sm text-gray-500">今日解いた問題数</p>
+                  <p className="text-3xl font-bold text-gray-800 ">
+                      {counts[today]}
+                      <span className="text-base font-medium text-gray-600 ">問</span>
                   </p>
               </div>
           </div>

@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import "./index.css";
-import IntegrationCalendar from './IntegrationCalendar';
+
 
 
 function App() {
@@ -62,13 +62,13 @@ function App() {
   };
 
   return (
-    <div className="app-container">
+    <div class="container max-w-screen-xl rounded-xl bg-white mx-auto px-4 outline outline-black/5">
+
       <h1>🌞 夏休み勉強アプリ</h1>
 
       
       <div className="App">
       {/* 他のコンポーネントがあるならその下などに配置 */}
-      <IntegrationCalendar />
     </div>
 
       <section>
