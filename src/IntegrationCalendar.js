@@ -303,22 +303,35 @@ const App = () => {
 
       <div className="my-8 flex flex-col items-center">
         <button
-      onClick={handleAddIntegration}
-      onMouseDown={handleMouseDown} // マウスが押された時にこの関数が呼ばれる
-      onMouseUp={handleMouseUp}     // マウスが離された時にこの関数が呼ばれる
-      onMouseLeave={handleMouseLeave} // マウスが離れた時にこの関数が呼ばれる
-      onAnimationEnd={handleAnimationEnd} // アニメーション終了時にこの関数が呼ばれる
-      className={`
-        text-3xl px-40 py-10 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold
-        rounded-full // ここを 'rounded-full' に戻します
-        shadow-xl    // 外側の影はそのまま
-        shadow-poyon-glow // 通常時の内側の光沢
-        hover:shadow-2xl hover:scale-103 transition-all duration-300 ease-out
-        focus:outline-none focus:ring-4 focus:ring-orange-300 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
-        ${isPressed ? 'animate-press-animation active:brightness-90 shadow-poyon-pressed' : ''}
-        ${isBouncing ? 'animate-poyon-animation' : ''}
-      `}
-    >
+        onClick={handleAddIntegration}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onAnimationEnd={handleAnimationEnd}
+        className={`
+            // デフォルト (モバイル向け): 画面いっぱいに表示
+            w-screen text-xl px-6 py-6
+            
+            // 小画面 (sm - タブレット向け): 画面いっぱいではないが主張を感じる大きさ
+            sm:w-auto sm:max-w-md sm:text-xl sm:px-8 sm:py-4 sm:mx-auto
+            
+            // 中画面 (md - 少し大きめのタブレット/小型デスクトップ向け):
+            md:max-w-lg md:text-2xl md:px-12 md:py-6
+            
+            // 大画面 (lg - デスクトップ向け): 普通の大きめのボタン
+            lg:max-w-xl lg:text-3xl lg:px-16 lg:py-8
+            
+            whitespace-nowrap // テキストの改行を防ぐ
+          bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold max-w-screen
+          rounded-full
+          shadow-xl
+          shadow-poyon-glow
+          hover:shadow-2xl hover:scale-103 transition-all duration-300 ease-out
+          focus:outline-none focus:ring-4 focus:ring-orange-300 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
+          ${isPressed ? 'animate-press-animation active:brightness-90 shadow-poyon-pressed' : ''}
+          ${isBouncing ? 'animate-poyon-animation' : ''}
+        `}
+      >
       積分できた！
     </button>
       </div>
@@ -386,18 +399,6 @@ const App = () => {
           stroke: white;
           stroke-width: 0.5px;
           animation: glow-effect 2s infinite ease-in-out;
-        }
-
-        /* --- ボタンの「ポヨン！」アニメーション --- */
-        @keyframes poyon-effect {
-          0% { transform: scale(1); }
-          40% { transform: scale(0.95); }
-          60% { transform: scale(1.1); }
-          80% { transform: scale(1.05); }
-          100% { transform: scale(1); }
-        }
-        .poyon-animation {
-          animation: poyon-effect 0.5s ease-out;
         }
       `}</style>
     </div>
