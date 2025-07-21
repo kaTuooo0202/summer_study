@@ -153,7 +153,6 @@ const App = () => {
     setIsBouncing(false); // バウンス状態をfalseに戻して、次回に備える
   };
 
-    // ---【変更点】スペースキーでの操作 ---
   // スペースキーが押されたらボタンのクリック処理を呼び出す
   useEffect(() => {
     const handleKeyDown = (event) => {
