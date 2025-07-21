@@ -27,6 +27,9 @@ const App = () => {
   // ボタンアニメーションを管理するstate
   // 今日の日付 ('YYYY-MM-DD'形式)
   const today = dayjs().format('YYYY-MM-DD');
+  // ★追加: 最高記録かどうかを管理するstate
+  const [isNewRecord, setIsNewRecord] = useState(false);
+
 
   // --- Firebase認証処理 (Googleログイン対応) ---
   useEffect(() => {
@@ -69,6 +72,21 @@ const App = () => {
 
     return () => unsubscribe();
   }, [user, isAuthReady]);
+
+  // ★追加: 最高記録かどうかを判定するuseEffect
+  useEffect(() => {
+    if (Object.keys(counts).length > 0) {
+      const todayCount = counts[today] || 0;
+      if (todayCount === 0) {
+        setIsNewRecord(false);
+        return;
+      }
+      const maxCount = Math.max(...Object.values(counts));
+      setIsNewRecord(todayCount >= maxCount);
+    } else {
+      setIsNewRecord(false);
+    }
+  }, [counts, today]);
 
   // --- Googleログイン処理 ---
   const handleGoogleSignIn = async () => {
@@ -173,7 +191,7 @@ const App = () => {
     if (count < 40) return 'color-scale-2';
     if (count < 60) return 'color-scale-3';
     if (count < 80) return 'color-scale-4';
-    if (count < 100) return 'color-scale-5';
+    if (count <= 100) return 'color-scale-5';
     return 'color-over glow';
   };
 
@@ -245,6 +263,14 @@ const App = () => {
   const totalCount = Object.values(counts).reduce((sum, c) => sum + c, 0);
   const goal = 5000;
   const progressPercentage = Math.min((totalCount / goal) * 100, 100);
+
+   // ★追加: カウントダウンの日数計算
+  const todayDate = dayjs();
+  const summerVacationEnd = dayjs('2025-09-11');
+  const midtermStart = dayjs('2025-10-21');
+  const daysToSummerEnd = Math.max(0, summerVacationEnd.diff(todayDate, 'day'));
+  const daysToMidterm = Math.max(0, midtermStart.diff(todayDate, 'day'));
+
 
   // --- レンダリング ---
   
@@ -351,9 +377,17 @@ const App = () => {
                   </p>
               </div>
               <div className="border-l-4 border-orange-100 pl-10">
-                <p className="text-sm text-gray-500">今日解いた問題数</p>
+                <div className="flex items-baseline">
+                  <p className="text-sm text-gray-500">今日解いた問題数</p>
+                  {/* ★変更点: 最高記録のバッジ */}
+                  {isNewRecord && (
+                    <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full animate-pulse">
+                        新記録！
+                    </span>
+                  )}
+                </div>
                   <p className="text-3xl font-bold text-gray-800 ">
-                      {counts[today]}
+                      {counts[today] || 0}
                       <span className="text-base font-medium text-gray-600 ">問</span>
                   </p>
               </div>
@@ -373,12 +407,39 @@ const App = () => {
       </div>
 
       <div className="mt-8 bg-white p-4 rounded-lg shadow-xl overflow-x-auto">
-        <div className="w-fit mx-auto"> {/* ⭐️追加した行 */}
+        <div className="w-fit mx-auto"> 
           <CustomHeatmap />
         </div>
         <Tooltip id="heatmap-tooltip" />
       </div>
       
+      {/* ★追加: カウントダウンセクション */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5 flex items-center space-x-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-yellow-400 p-3 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-yellow-600 font-semibold">二学期開始まで</p>
+            <p className="text-4xl font-bold text-yellow-800">{daysToSummerEnd}<span className="text-xl ml-1">日</span></p>
+          </div>
+        </div>
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 flex items-center space-x-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-blue-400 p-3 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v11.494m-5.247-8.995l10.494 0M12 6.253L5.253 12 12 17.747 18.747 12 12 6.253z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 19h16" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-blue-600 font-semibold">中間試験開始まで</p>
+            <p className="text-4xl font-bold text-blue-800">{daysToMidterm}<span className="text-xl ml-1">日</span></p>
+          </div>
+        </div>
+      </div>
+
       <style>{`
         body { background-color: #f9fafb; }
         .color-empty { fill: #ebedf0; }
