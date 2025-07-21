@@ -169,11 +169,11 @@ const App = () => {
   // --- ヒートマップの描画ロジック ---
   const getClassForValue = (count) => {
     if (count === 0) return 'color-empty';
-    if (count <= 20) return 'color-scale-1';
-    if (count <= 40) return 'color-scale-2';
-    if (count <= 60) return 'color-scale-3';
-    if (count <= 80) return 'color-scale-4';
-    if (count <= 100) return 'color-scale-5';
+    if (count < 20) return 'color-scale-1';
+    if (count < 40) return 'color-scale-2';
+    if (count < 60) return 'color-scale-3';
+    if (count < 80) return 'color-scale-4';
+    if (count < 100) return 'color-scale-5';
     return 'color-over glow';
   };
 
