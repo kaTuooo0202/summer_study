@@ -190,7 +190,7 @@ const App = () => {
     if (count < 40) return 'color-scale-2';
     if (count < 60) return 'color-scale-3';
     if (count < 80) return 'color-scale-4';
-    if (count <= 100) return 'color-scale-5';
+    if (count < 100) return 'color-scale-5';
     return 'color-over glow';
   };
 
