@@ -7,23 +7,23 @@
 
 /* 他のカスタムCSSがあればここに追加 */
 
+body { background-color: #f9fafb; }
+        .color-empty { fill: #ebedf0; }
+        .color-scale-1 { fill: #c6e48b; }
+        .color-scale-2 { fill: #7bc96f; }
+        .color-scale-3 { fill: #239a3b; }
+        .color-scale-4 { fill: #196127; }
+        .color-scale-5 { fill: #103a18; }
+        .color-over { fill: #ffc107; }
+        .today { stroke: #d73a49; stroke-width: 2; }
+        .summer { stroke: #0366d6; stroke-dasharray: 2 2; stroke-width: 1.5; }
 
-.card {
-  background: #323232;
-  padding: 1rem;
-  border: 1px solid #ddd;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-}
-
-.step-row {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.5rem;
-}
-
-.done {
-  text-decoration: line-through;
-  color: rgb(201, 201, 201);
-}
-
+        @keyframes glow-effect {
+          0%, 100% { filter: drop-shadow(0 0 2px #fde047); stroke: rgba(255, 255, 255, 0.7); }
+          50% { filter: drop-shadow(0 0 6px #fde047); stroke: rgba(255, 255, 255, 1); }
+        }
+        .glow {
+          stroke: white;
+          stroke-width: 0.5px;
+          animation: glow-effect 2s infinite ease-in-out;
+        }

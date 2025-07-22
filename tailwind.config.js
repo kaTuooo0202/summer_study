@@ -3,7 +3,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/IntegrationCalendar.{js,jsx,ts,tsx}",
+    "./src/components/IntegrationCalendar.{js,jsx,ts,tsx}",
+    "./src/components/TodoList.{js,jsx,ts,tsx}",
     "./src/App.{js,jsx,ts,tsx}" 
   ],
   theme: {
