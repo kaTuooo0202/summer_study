@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/summer_study/static/css/main.e4a785f1.css",
-    "main.js": "/summer_study/static/js/main.0cf80e5d.js",
+    "main.css": "/summer_study/static/css/main.9f1313ea.css",
+    "main.js": "/summer_study/static/js/main.a946284d.js",
     "static/js/453.a9cf9a0d.chunk.js": "/summer_study/static/js/453.a9cf9a0d.chunk.js",
     "index.html": "/summer_study/index.html",
-    "main.e4a785f1.css.map": "/summer_study/static/css/main.e4a785f1.css.map",
-    "main.0cf80e5d.js.map": "/summer_study/static/js/main.0cf80e5d.js.map",
+    "main.9f1313ea.css.map": "/summer_study/static/css/main.9f1313ea.css.map",
+    "main.a946284d.js.map": "/summer_study/static/js/main.a946284d.js.map",
     "453.a9cf9a0d.chunk.js.map": "/summer_study/static/js/453.a9cf9a0d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.e4a785f1.css",
-    "static/js/main.0cf80e5d.js"
+    "static/css/main.9f1313ea.css",
+    "static/js/main.a946284d.js"
   ]
 }

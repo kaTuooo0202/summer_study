@@ -12,6 +12,7 @@ const IntegrationCalendar = () => {
   const { user } = useAuth();
   const [counts, setCounts] = useState({});
   const [isNewRecord, setIsNewRecord] = useState(false);
+  const [streak, setStreak] = useState(0);
   const [isPressed, setIsPressed] = useState(false);
   const [isBouncing, setIsBouncing] = useState(false);
   const today = dayjs().format('YYYY-MM-DD');
@@ -32,6 +33,31 @@ const IntegrationCalendar = () => {
 
     return () => unsubscribe();
   }, [user]);
+
+  useEffect(() => {
+    const calculateStreak = () => {
+      if (!counts || Object.keys(counts).length === 0) {
+        return 0;
+      }
+      
+      let currentStreak = 0;
+      let checkDate = dayjs();
+      
+      if ((counts[checkDate.format('YYYY-MM-DD')] || 0) === 0) {
+        checkDate = checkDate.subtract(1, 'day');
+      }
+
+      // Loop backwards day-by-day to count consecutive days
+      while (counts[checkDate.format('YYYY-MM-DD')] > 0) {
+        currentStreak++;
+        checkDate = checkDate.subtract(1, 'day');
+      }
+      
+      return currentStreak;
+    };
+
+    setStreak(calculateStreak());
+  }, [counts]);
 
   useEffect(() => {
     if (Object.keys(counts).length > 0) {
@@ -152,7 +178,7 @@ const IntegrationCalendar = () => {
   const daysToMidterm = Math.max(0, dayjs('2025-10-21').diff(dayjs(), 'day'));
 
   return (
-    // ★変更点: ヘッダー部分はApp.jsに移動したので削除
+   
     <>
       <div className="my-8 flex flex-col items-center">
         <button
@@ -166,35 +192,46 @@ const IntegrationCalendar = () => {
           積分できた！
         </button>
       </div>
-      <div className="flex-auto my-8 max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6">
-        <div className="flex items-center space-x-4">
-          <div className="flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-2a3 3 0 00-3-3H9a3 3 0 00-3 3v2m12-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              <path d="M15 12c-2.333 2.333-2.333 2.333-7 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div className='pr-6'>
-            <p className="text-sm text-gray-500">合計学習量</p>
-            <p className="text-3xl font-bold text-gray-800">
-              {totalCount.toLocaleString()}
-              <span className="text-base font-medium text-gray-600 ml-1">問</span>
-            </p>
-          </div>
-          <div className="border-l-4 border-orange-100 pl-10">
-            <div className="flex items-baseline">
-              <p className="text-sm text-gray-500">今日解いた問題数</p>
-              {isNewRecord && (
-                <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full animate-pulse">
-                  新記録！
-                </span>
-              )}
-            </div>
-            <p className="text-3xl font-bold text-gray-800 ">
-              {counts[today] || 0}
-              <span className="text-base font-medium text-gray-600 ">問</span>
-            </p>
-          </div>
+
+      <div className="flex-auto my-8 max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+        <div className="flex items-center justify-around text-center">
+          <div>
+                    <p className="text-sm text-gray-500">合計学習量</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                        {totalCount.toLocaleString()}
+                        <span className="text-base font-medium text-gray-600 ml-1">問</span>
+                    </p>
+                </div>
+
+                {/* Today's Count */}
+                <div className="border-l border-gray-200 px-6 sm:px-8">
+                    <div className="flex items-center justify-center">
+                        <p className="text-sm text-gray-500">今日</p>
+                        {isNewRecord && (
+                            <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full animate-pulse">
+                                新記録!
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-3xl font-bold text-gray-800">
+                        {counts[today] || 0}
+                        <span className="text-base font-medium text-gray-600 ml-1">問</span>
+                    </p>
+                </div>
+
+              <div className="border-l border-gray-200 pl-6 sm:pl-8">
+                    <p className="text-sm text-gray-500">継続</p>
+                    <div className="flex items-center justify-center mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 transition-colors duration-500 ${streak > 0 ? 'text-orange-500' : 'text-gray-300'}`} viewBox="0 0 20 20" fill="currentColor">
+                           <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.934L10 3.414 7.877 1.29a1 1 0 00-1.45.385L2.5 8.536a1 1 0 00.385 1.45l6.25 4.375a1 1 0 001.23-.001l6.25-4.375a1 1 0 00.385-1.45l-3.877-6.857z" clipRule="evenodd" />
+                        </svg>
+                         <p className="text-3xl font-bold text-gray-800 ml-1">
+                            {streak}
+                            <span className="text-base font-medium text-gray-600 ml-1">日</span>
+                        </p>
+                    </div>
+                </div>
+
         </div>
         <div className="mt-5">
           <div className="flex justify-between items-baseline mb-1">
