@@ -174,7 +174,7 @@ const IntegrationCalendar = () => {
   const totalCount = Object.values(counts).reduce((sum, c) => sum + (typeof c === 'number' ? c : 0), 0);
   const goal = 5000;
   const progressPercentage = Math.min((totalCount / goal) * 100, 100);
-  const daysToSummerEnd = Math.max(0, dayjs('2025-09-11').diff(dayjs(), 'day'));
+  const daysToLastTest = Math.max(0, dayjs('2025-12-01').diff(dayjs(), 'day'));
   const daysToMidterm = Math.max(0, dayjs('2025-10-21').diff(dayjs(), 'day'));
 
   return (
@@ -253,24 +253,27 @@ const IntegrationCalendar = () => {
         <Tooltip id="heatmap-tooltip" />
       </div>
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5 flex items-center space-x-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="bg-yellow-400 p-3 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-          </div>
-          <div>
-            <p className="text-yellow-600 font-semibold">二学期開始まで</p>
-            <p className="text-4xl font-bold text-yellow-800">{daysToSummerEnd}<span className="text-xl ml-1">日</span></p>
-          </div>
-        </div>
+        
         <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 flex items-center space-x-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <div className="bg-blue-400 p-3 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v11.494m-5.247-8.995l10.494 0M12 6.253L5.253 12 12 17.747 18.747 12 12 6.253z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 19h16" /></svg>
+            <span class="text-3xl">📝</span>
           </div>
           <div>
             <p className="text-blue-600 font-semibold">中間試験開始まで</p>
             <p className="text-4xl font-bold text-blue-800">{daysToMidterm}<span className="text-xl ml-1">日</span></p>
           </div>
         </div>
+
+        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5 flex items-center space-x-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-yellow-400 p-3 rounded-full">
+            <span class="text-3xl">📅</span>
+          </div>
+          <div>
+            <p className="text-yellow-600 font-semibold">期末試験開始まで</p>
+            <p className="text-4xl font-bold text-yellow-800">{daysToLastTest}<span className="text-xl ml-1">日</span></p>
+          </div>
+        </div>
+
       </div>
       
     </>
